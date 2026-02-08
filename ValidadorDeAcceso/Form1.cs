@@ -118,7 +118,7 @@ namespace ValidadorDeAcceso
             btnAgregar.Enabled = false;
             txtNombre.Enabled = false;
             txtContraseña.Enabled = false;
-            btnMostrarUsuarios.Enabled = false;
+            button1.Enabled = false;
             lstUsuarios.Enabled = false;
         }
 
@@ -134,15 +134,11 @@ namespace ValidadorDeAcceso
 
         private void button1_Click(object sender, EventArgs e)
         {
-       
-           // Alterna la visibilidad del listado de usuarios
             lstUsuarios.Visible = !lstUsuarios.Visible;
-           btnMostrarUsuarios.Text = lstUsuarios.Visible ? "Ocultar usuarios" : "Mostrar usuarios";
+            button1.Text = lstUsuarios.Visible ? "Ocultar usuarios" : "Mostrar usuarios";
 
             if (lstUsuarios.Visible)
-            {
                 lstUsuarios.Focus();
-            }
         }
 
          
