@@ -14,14 +14,29 @@ namespace ValidadorDeAcceso
     {
         private GestorAcceso gestor;
         private Button btnMostrarUsuarios;
-
+        // Mantener una lista local de nombres para poblar lstUsuarios sin depender de la API interna de GestorAcceso
+        private readonly List<string> listaNombres = new List<string>();
+        
         public Form1()
         {
             InitializeComponent();
+
+            this.button1 = new System.Windows.Forms.Button();
+this.btnMostrarUsuarios = this.button1;
+
             gestor = new GestorAcceso();
+
             // Usuario de ejemplo
-            gestor.AgregarUsuario(new Usuario("admin", "1234"));
-            //ActualizarListaUsuarios();
+            gestor.AgregarUsuario(new Usuario("",""));
+            listaNombres.Add("");
+
+            // Estado inicial de la UI coherente con el texto del botón
+            lstUsuarios.Visible = false;
+            btnMostrarUsuarios.Text = "Mostrar usuarios";
+
+            // Poblamos la lista visual con la lista local
+            ActualizarListaUsuarios();
+
             ActualizarIntentos();
             lblEstado.Text = "Listo";
         }
@@ -41,11 +56,16 @@ namespace ValidadorDeAcceso
                 return;
             }
 
+            // Agregar al gestor y mantener la lista local sincronizada
             gestor.AgregarUsuario(new Usuario(nombre, contraseña));
+            listaNombres.Add(nombre);
+
             lblEstado.Text = $"Usuario \"{nombre}\" agregado.";
             txtNombre.Clear();
             txtContraseña.Clear();
-            //ActualizarListaUsuarios();
+
+            // Actualizar la lista visible
+            ActualizarListaUsuarios();
         }
 
         private void btnValidar_Click(object sender, EventArgs e)
@@ -82,9 +102,6 @@ namespace ValidadorDeAcceso
 
             ActualizarIntentos();
         }
-
-        
-        
 
         private void lstUsuarios_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -124,7 +141,7 @@ namespace ValidadorDeAcceso
 
         private void ActualizarIntentos()
         {
-           lblIntentos.Text = $"Intentos fallidos: {gestor.IntentosFallidos} {gestor.MaxIntentos}";
+           lblIntentos.Text = $"Intentos fallidos: {gestor.IntentosFallidos}/{gestor.MaxIntentos}";
         }
 
         private void lblIntentos_Click(object sender, EventArgs e)
@@ -132,6 +149,7 @@ namespace ValidadorDeAcceso
 
         }
 
+        // Toggle del listado de usuarios
         private void button1_Click(object sender, EventArgs e)
         {
             lstUsuarios.Visible = !lstUsuarios.Visible;
@@ -141,7 +159,35 @@ namespace ValidadorDeAcceso
                 lstUsuarios.Focus();
         }
 
-         
+        // Rellena lstUsuarios a partir de la lista local sincronizada al agregar usuarios
+        private void ActualizarListaUsuarios()
+        {
+            lstUsuarios.BeginUpdate();
+            try
+            {
+                lstUsuarios.Items.Clear();
+                foreach (var nombre in listaNombres)
+                {
+                    lstUsuarios.Items.Add(nombre);
+                }
+            }
+            finally
+            {
+                lstUsuarios.EndUpdate();
+            }
+
+            // Si no hay usuarios, ocultar la lista y ajustar texto del botón
+            if (lstUsuarios.Items.Count == 0)
+            {
+                lstUsuarios.Visible = false;
+                if (btnMostrarUsuarios != null) btnMostrarUsuarios.Text = "Mostrar usuarios";
+            }
+        }
+
+        private void lstUsuarios_SelectedIndexChanged_1(object sender, EventArgs e)
+        {
+
+        }
     }
 }
 

@@ -81,7 +81,6 @@
             this.txtContraseña.Name = "txtContraseña";
             this.txtContraseña.Size = new System.Drawing.Size(200, 20);
             this.txtContraseña.TabIndex = 3;
-            this.txtContraseña.UseSystemPasswordChar = true;
             // 
             // btnValidar
             // 
@@ -129,6 +128,7 @@
             this.lstUsuarios.Name = "lstUsuarios";
             this.lstUsuarios.Size = new System.Drawing.Size(200, 173);
             this.lstUsuarios.TabIndex = 8;
+            this.lstUsuarios.SelectedIndexChanged += new System.EventHandler(this.lstUsuarios_SelectedIndexChanged_1);
             // 
             // button1
             // 

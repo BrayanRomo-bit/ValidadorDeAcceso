@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ValidadorDeAcceso
@@ -9,6 +10,9 @@ namespace ValidadorDeAcceso
     internal class GestorAcceso
     {
         private List<Usuario> usuarios;
+
+        public Timer Timer { get; private set; }
+
         private int intentosFallidos = 0;
         private const int MAX_INTENTOS = 3;
 
@@ -74,20 +78,22 @@ namespace ValidadorDeAcceso
         {
             return intentosFallidos >= MAX_INTENTOS;
         }
-        public void ReiniciarIntentos()
+        public void ReiniciarIntentos(Timer timer)
         {
+            Timer= new Timer((state) =>
+            {
+                intentosFallidos = 0;
+            }, null, TimeSpan.FromSeconds(5), Timeout.InfiniteTimeSpan);
             intentosFallidos = 0;
         }
-        public void Desbloquear()
-        {
-            ReiniciarIntentos();
-        }
+       
         public void MostrarUsuarios()
         {
-            Console.WriteLine("Usuarios registrados:");
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Usuarios registrados:");
             foreach (var usuario in usuarios)
             {
-                Console.WriteLine("- " + usuario.Nombre);
+                sb.AppendLine("- " + usuario.Nombre);
             }
         }
     }
