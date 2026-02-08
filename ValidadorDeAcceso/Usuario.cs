@@ -24,6 +24,11 @@ namespace ValidadorDeAcceso
 
 
         // Constructor
+        public Usuario()
+        {
+            nombre = "";
+            contraseña = "";
+        }   
         public Usuario(string nombre, string contraseña)
         {
             this.nombre = nombre;

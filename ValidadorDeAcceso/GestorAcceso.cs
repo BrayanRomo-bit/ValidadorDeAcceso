@@ -31,7 +31,7 @@ namespace ValidadorDeAcceso
         }
         public bool ValidarAcceso(string nombre, string contraseña)
         {
-            if (intentosFallidos > MAX_INTENTOS)
+            if (intentosFallidos >= MAX_INTENTOS)
             {
                 StringBuilder csb = new StringBuilder();
                 csb.AppendLine("Demasiados intentos fallidos. Acceso bloqueado.");
@@ -51,7 +51,44 @@ namespace ValidadorDeAcceso
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Acceso denegado. Intento fallido #" + intentosFallidos);
             return false;
+        }
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Usuarios registrados:");
+            foreach (var usuario in usuarios)
+            {
+                sb.AppendLine("- " + usuario.Nombre);
+            }
+            return sb.ToString();
 
+        }
+        public int IntentosFallidos
+        {
+            get { return intentosFallidos; }
+        }
+
+        public object MaxIntentos { get; internal set; }
+
+        public bool EstaBloqueado()
+        {
+            return intentosFallidos >= MAX_INTENTOS;
+        }
+        public void ReiniciarIntentos()
+        {
+            intentosFallidos = 0;
+        }
+        public void Desbloquear()
+        {
+            ReiniciarIntentos();
+        }
+        public void MostrarUsuarios()
+        {
+            Console.WriteLine("Usuarios registrados:");
+            foreach (var usuario in usuarios)
+            {
+                Console.WriteLine("- " + usuario.Nombre);
+            }
         }
     }
 }
