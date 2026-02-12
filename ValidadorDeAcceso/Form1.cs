@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Drawing; // Necesario para cambiar colores (Color.Red, etc.)
+using System.Threading.Tasks; // Necesario para Task.Delay
 using System.Windows.Forms;
 
 namespace ValidadorDeAcceso
@@ -13,29 +9,25 @@ namespace ValidadorDeAcceso
     public partial class Form1 : Form
     {
         private GestorAcceso gestor;
+        // Referencia para el botón "Mostrar usuarios" que creaste dinámicamente o en designer
         private Button btnMostrarUsuarios;
-        // Mantener una lista local de nombres para poblar lstUsuarios sin depender de la API interna de GestorAcceso
+
+        // Lista local para la UI
         private readonly List<string> listaNombres = new List<string>();
-        
+
         public Form1()
         {
             InitializeComponent();
 
-            this.button1 = new System.Windows.Forms.Button();
-this.btnMostrarUsuarios = this.button1;
+            // Configuración inicial de tus controles
+            // Nota: Si 'button1' ya existe en el Designer, esta línea lo asigna.
+            this.btnMostrarUsuarios = this.button1;
 
             gestor = new GestorAcceso();
 
-            // Usuario de ejemplo
-            gestor.AgregarUsuario(new Usuario("",""));
-            listaNombres.Add("");
-
-            // Estado inicial de la UI coherente con el texto del botón
+            // Estado inicial de la UI
             lstUsuarios.Visible = false;
-            btnMostrarUsuarios.Text = "Mostrar usuarios";
-
-            // Poblamos la lista visual con la lista local
-            ActualizarListaUsuarios();
+            if (btnMostrarUsuarios != null) btnMostrarUsuarios.Text = "Mostrar usuarios";
 
             ActualizarIntentos();
             lblEstado.Text = "Listo";
@@ -43,140 +35,134 @@ this.btnMostrarUsuarios = this.button1;
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
         }
 
+        // --- BOTÓN AGREGAR ---
         private void btnAgregar_Click(object sender, EventArgs e)
         {
             var nombre = txtNombre.Text.Trim();
             var contraseña = txtContraseña.Text;
+
             if (string.IsNullOrEmpty(nombre) || string.IsNullOrEmpty(contraseña))
             {
-                lblEstado.Text = "Nombre y contraseña obligatorios para agregar.";
+                lblEstado.Text = "Nombre y contraseña obligatorios.";
+                lblEstado.ForeColor = Color.Red;
                 return;
             }
 
-            // Agregar al gestor y mantener la lista local sincronizada
             gestor.AgregarUsuario(new Usuario(nombre, contraseña));
             listaNombres.Add(nombre);
 
             lblEstado.Text = $"Usuario \"{nombre}\" agregado.";
+            lblEstado.ForeColor = Color.Green;
+
             txtNombre.Clear();
             txtContraseña.Clear();
+            txtNombre.Focus();
 
-            // Actualizar la lista visible
             ActualizarListaUsuarios();
         }
 
-        private void btnValidar_Click(object sender, EventArgs e)
+        // --- BOTÓN VALIDAR (Aquí está la lógica del bloqueo) ---
+        private async void btnValidar_Click(object sender, EventArgs e)
         {
             var nombre = txtNombre.Text.Trim();
             var contraseña = txtContraseña.Text;
+
             if (string.IsNullOrEmpty(nombre) || string.IsNullOrEmpty(contraseña))
             {
-                lblEstado.Text = "Ingrese nombre y contraseña para validar.";
-                return;
-            }
-            if (gestor.EstaBloqueado())
-            {
-                lblEstado.Text = "Acceso bloqueado por demasiados intentos.";
-                DeshabilitarAcciones();
+                lblEstado.Text = "Ingrese sus datos.";
                 return;
             }
 
+            // 1. Validar credenciales
             var valido = gestor.ValidarAcceso(nombre, contraseña);
+
             if (valido)
             {
-                lblEstado.Text = $"Acceso concedido. Bienvenido, {nombre}!";
+                lblEstado.Text = $"¡Bienvenido, {nombre}!";
+                lblEstado.ForeColor = Color.Green;
+                // Aquí podrías abrir otra ventana o realizar acciones de éxito
             }
             else
             {
-                lblEstado.Text = $"Acceso denegado. Intento #{gestor.IntentosFallidos}";
-            }
-
-            if (gestor.EstaBloqueado())
-            {
-                lblEstado.Text = "Acceso bloqueado por demasiados intentos.";
-                DeshabilitarAcciones();
+                lblEstado.Text = "Credenciales incorrectas.";
+                lblEstado.ForeColor = Color.Red;
             }
 
             ActualizarIntentos();
-        }
 
-        private void lstUsuarios_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            // Al seleccionar un usuario, rellenar el campo nombre y situar foco en contraseña
-            if (lstUsuarios.SelectedItem == null)
+            // 2. Comprobar si debemos bloquear
+            if (gestor.EstaBloqueado())
             {
-                return;
-            }
+                // INICIO DEL BLOQUEO
+                lblEstado.Text = "BLOQUEADO: Espere 5 segundos...";
+                lblEstado.ForeColor = Color.DarkRed;
 
-            txtNombre.Text = lstUsuarios.SelectedItem.ToString();
-            txtContraseña.Clear();
-            txtContraseña.Focus();
-            lblEstado.Text = $"Usuario \"{txtNombre.Text}\" seleccionado. Introduce la contraseña para validar.";
+                DeshabilitarAcciones(); // Congelar botones
+
+                // Esperar 5 segundos SIN congelar la ventana}
+                await Task.Delay(5000);
+
+                // FIN DEL BLOQUEO
+                gestor.ReiniciarIntentos(); // Resetear contador interno
+                HabilitarAcciones();       // Reactivar botones
+
+                ActualizarIntentos();
+                lblEstado.Text = "Sistema desbloqueado. Intente de nuevo.";
+                lblEstado.ForeColor = Color.Black;
+
+                txtContraseña.Clear();
+                txtContraseña.Focus();
+            }
         }
 
-        private void lstUsuarios_DoubleClick(object sender, EventArgs e)
-        {
-            // Doble clic: intenta validar usando el usuario seleccionado y la contraseña actual
-            if (lstUsuarios.SelectedItem == null)
-            {
-                return;
-            }
-
-            txtNombre.Text = lstUsuarios.SelectedItem.ToString();
-            btnValidar_Click(this, EventArgs.Empty);
-        }
-
+        // Métodos auxiliares para la interfaz
         private void DeshabilitarAcciones()
         {
             btnValidar.Enabled = false;
             btnAgregar.Enabled = false;
             txtNombre.Enabled = false;
             txtContraseña.Enabled = false;
-            button1.Enabled = false;
+            if (button1 != null) button1.Enabled = false;
             lstUsuarios.Enabled = false;
+        }
+
+        private void HabilitarAcciones()
+        {
+            btnValidar.Enabled = true;
+            btnAgregar.Enabled = true;
+            txtNombre.Enabled = true;
+            txtContraseña.Enabled = true;
+            if (button1 != null) button1.Enabled = true;
+            lstUsuarios.Enabled = true;
         }
 
         private void ActualizarIntentos()
         {
-           lblIntentos.Text = $"Intentos fallidos: {gestor.IntentosFallidos}/{gestor.MaxIntentos}";
-        }
+            lblIntentos.Text = $"Intentos fallidos: {gestor.IntentosFallidos}/{gestor.MaxIntentos}";
 
-        private void lblIntentos_Click(object sender, EventArgs e)
-        {
 
         }
 
-        // Toggle del listado de usuarios
+        // --- Resto de funciones de la UI ---
+
         private void button1_Click(object sender, EventArgs e)
         {
             lstUsuarios.Visible = !lstUsuarios.Visible;
             button1.Text = lstUsuarios.Visible ? "Ocultar usuarios" : "Mostrar usuarios";
-
-            if (lstUsuarios.Visible)
-                lstUsuarios.Focus();
         }
 
-        // Rellena lstUsuarios a partir de la lista local sincronizada al agregar usuarios
         private void ActualizarListaUsuarios()
         {
             lstUsuarios.BeginUpdate();
-            try
+            lstUsuarios.Items.Clear();
+            foreach (var nombre in listaNombres)
             {
-                lstUsuarios.Items.Clear();
-                foreach (var nombre in listaNombres)
-                {
-                    lstUsuarios.Items.Add(nombre);
-                }
+                lstUsuarios.Items.Add(nombre);
             }
-            finally
-            {
-                lstUsuarios.EndUpdate();
-            }
+            lstUsuarios.EndUpdate();
 
-            // Si no hay usuarios, ocultar la lista y ajustar texto del botón
             if (lstUsuarios.Items.Count == 0)
             {
                 lstUsuarios.Visible = false;
@@ -186,8 +172,15 @@ this.btnMostrarUsuarios = this.button1;
 
         private void lstUsuarios_SelectedIndexChanged_1(object sender, EventArgs e)
         {
-
+            if (lstUsuarios.SelectedItem != null)
+            {
+                txtNombre.Text = lstUsuarios.SelectedItem.ToString();
+                txtContraseña.Clear();
+                txtContraseña.Focus();
+            }
         }
+
+        // Eventos vacíos que tenías generados (puedes dejarlos o borrarlos)
+        private void lblIntentos_Click(object sender, EventArgs e) { }
     }
 }
-

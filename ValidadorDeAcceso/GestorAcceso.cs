@@ -1,28 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ValidadorDeAcceso
 {
     internal class GestorAcceso
     {
         private List<Usuario> usuarios;
-
-        public Timer Timer { get; private set; }
-
         private int intentosFallidos = 0;
-        private const int MAX_INTENTOS = 3;
 
-        // Constructor para inicializar la lista de usuarios
+        // Hacemos pública la constante para poder leerla desde fuera si es necesario
+        public const int MAX_INTENTOS = 3;
+
+        // Constructor
         public GestorAcceso()
         {
             usuarios = new List<Usuario>();
-            // Agregar algunos usuarios de ejemplo
-
         }
+
         public GestorAcceso(List<Usuario> usuarios)
         {
             this.usuarios = usuarios;
@@ -31,63 +26,55 @@ namespace ValidadorDeAcceso
         public void AgregarUsuario(Usuario usuario)
         {
             usuarios.Add(usuario);
-
         }
+
         public bool ValidarAcceso(string nombre, string contraseña)
         {
+            // Si ya está bloqueado lógicamente, no validar (capa de seguridad extra)
             if (intentosFallidos >= MAX_INTENTOS)
             {
-                StringBuilder csb = new StringBuilder();
-                csb.AppendLine("Demasiados intentos fallidos. Acceso bloqueado.");
                 return false;
             }
+
             foreach (var usuario in usuarios)
             {
                 if (usuario.Nombre == nombre && usuario.Contraseña == contraseña)
                 {
-                    StringBuilder sbb = new StringBuilder();
-                    sbb.AppendLine("Acceso concedido. Bienvenido, " + nombre + "!");
-                    intentosFallidos = 0; // Reiniciar el contador de intentos fallidos
+                    intentosFallidos = 0; // Éxito: Reiniciar contador
                     return true;
                 }
             }
+
+            // Fallo: Aumentar contador
             intentosFallidos++;
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Acceso denegado. Intento fallido #" + intentosFallidos);
             return false;
         }
-        public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Usuarios registrados:");
-            foreach (var usuario in usuarios)
-            {
-                sb.AppendLine("- " + usuario.Nombre);
-            }
-            return sb.ToString();
 
+        // Método simple para reiniciar el contador desde el Form
+        public void ReiniciarIntentos()
+        {
+            intentosFallidos = 0;
         }
+
+        // Propiedades para leer el estado
         public int IntentosFallidos
         {
             get { return intentosFallidos; }
         }
 
-        public object MaxIntentos { get; internal set; }
+        public int MaxIntentos
+        {
+            get { return MAX_INTENTOS; }
+        }
 
         public bool EstaBloqueado()
         {
             return intentosFallidos >= MAX_INTENTOS;
         }
-        public void ReiniciarIntentos(Timer timer)
-        {
-            Timer= new Timer((state) =>
-            {
-                intentosFallidos = 0;
-            }, null, TimeSpan.FromSeconds(5), Timeout.InfiniteTimeSpan);
-            intentosFallidos = 0;
-        }
+
+        
        
-        public void MostrarUsuarios()
+                 public void MostrarUsuarios()
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("Usuarios registrados:");
