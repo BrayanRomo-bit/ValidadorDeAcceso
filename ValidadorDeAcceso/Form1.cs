@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing; // Necesario para cambiar colores (Color.Red, etc.)
-using System.Threading.Tasks; // Necesario para Task.Delay
+using System.Threading.Tasks; 
 using System.Windows.Forms;
 
 namespace ValidadorDeAcceso
@@ -9,7 +8,7 @@ namespace ValidadorDeAcceso
     public partial class Form1 : Form
     {
         private GestorAcceso gestor;
-        // Referencia para el botón "Mostrar usuarios" que creaste dinámicamente o en designer
+        // Referencia para el botón "Mostrar usuarios" 
         private Button btnMostrarUsuarios;
 
         // Lista local para la UI
@@ -19,8 +18,6 @@ namespace ValidadorDeAcceso
         {
             InitializeComponent();
 
-            // Configuración inicial de tus controles
-            // Nota: Si 'button1' ya existe en el Designer, esta línea lo asigna.
             this.btnMostrarUsuarios = this.button1;
 
             gestor = new GestorAcceso();
@@ -46,7 +43,7 @@ namespace ValidadorDeAcceso
             if (string.IsNullOrEmpty(nombre) || string.IsNullOrEmpty(contraseña))
             {
                 lblEstado.Text = "Nombre y contraseña obligatorios.";
-                lblEstado.ForeColor = Color.Red;
+              
                 return;
             }
 
@@ -54,7 +51,7 @@ namespace ValidadorDeAcceso
             listaNombres.Add(nombre);
 
             lblEstado.Text = $"Usuario \"{nombre}\" agregado.";
-            lblEstado.ForeColor = Color.Green;
+       
 
             txtNombre.Clear();
             txtContraseña.Clear();
@@ -63,7 +60,7 @@ namespace ValidadorDeAcceso
             ActualizarListaUsuarios();
         }
 
-        // --- BOTÓN VALIDAR (Aquí está la lógica del bloqueo) ---
+        // --- BOTÓN VALIDAR ---
         private async void btnValidar_Click(object sender, EventArgs e)
         {
             var nombre = txtNombre.Text.Trim();
@@ -81,13 +78,13 @@ namespace ValidadorDeAcceso
             if (valido)
             {
                 lblEstado.Text = $"¡Bienvenido, {nombre}!";
-                lblEstado.ForeColor = Color.Green;
+                
                 // Aquí podrías abrir otra ventana o realizar acciones de éxito
             }
             else
             {
                 lblEstado.Text = "Credenciales incorrectas.";
-                lblEstado.ForeColor = Color.Red;
+               
             }
 
             ActualizarIntentos();
@@ -97,7 +94,7 @@ namespace ValidadorDeAcceso
             {
                 // INICIO DEL BLOQUEO
                 lblEstado.Text = "BLOQUEADO: Espere 5 segundos...";
-                lblEstado.ForeColor = Color.DarkRed;
+                
 
                 DeshabilitarAcciones(); // Congelar botones
 
@@ -110,7 +107,7 @@ namespace ValidadorDeAcceso
 
                 ActualizarIntentos();
                 lblEstado.Text = "Sistema desbloqueado. Intente de nuevo.";
-                lblEstado.ForeColor = Color.Black;
+               
 
                 txtContraseña.Clear();
                 txtContraseña.Focus();
@@ -180,7 +177,7 @@ namespace ValidadorDeAcceso
             }
         }
 
-        // Eventos vacíos que tenías generados (puedes dejarlos o borrarlos)
+        
         private void lblIntentos_Click(object sender, EventArgs e) { }
     }
 }
